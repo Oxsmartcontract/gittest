@@ -1,0 +1,30 @@
+name: Retroactive Commit
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Git
+      run: |
+        git config --global user.email "hodor328@gmail.com"
+        git config --global user.name "Oxsmartcontract"
+
+    - name: Retroactive Commits
+      run: |
+        for i in {1..150}; do
+          DATE=$(date -d "$i days ago" '+%Y-%m-%dT%H:%M:%S')
+          LINES=$(wc -l < stickers.txt)
+          RAND=$(( ( RANDOM % LINES ) + 1 ))
+          STICKER=$(sed -n "${RAND}p" stickers.txt)
+          echo "Commit made at $DATE with sticker: $STICKER" >> commit-log.txt
+          git add commit-log.txt
+          GIT_COMMITTER_DATE=$DATE GIT_AUTHOR_DATE=$DATE git commit -m "Automated commit with sticker: $STICKER"
+        done
+        git push https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.git HEAD:main
